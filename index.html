@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a1822" />
+    <title>Ship Navigation Game</title>
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Open water / chart 01</p>
+          <h1>Ship Navigation Game</h1>
+        </div>
+        <div class="status-cluster">
+          <span class="status-dot"></span>
+          <span id="voyage-status">Ready</span>
+        </div>
+      </header>
+      <section class="game-layout" aria-label="Navigation game">
+        <div class="chart-frame">
+          <canvas id="game-canvas" aria-label="Top-down ocean navigation map"></canvas>
+          <div class="chart-label chart-label--north">N</div>
+          <div class="chart-label chart-label--south">S</div>
+          <div id="start-banner" class="start-banner">Use arrow keys to navigate left and right. Press space bar to begin.</div>
+          <div class="survived-readout"><span>Survived</span><strong id="distance">0 s</strong></div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
