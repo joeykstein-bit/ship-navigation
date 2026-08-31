@@ -61,6 +61,7 @@ let crashed = false;
 let crashKind: 'land' | 'whirlpool' | null = null;
 let turtleSlowUntil = 0;
 let turtleSlowActive = false;
+let boatWhaleContact = false;
 let started = false;
 let dolphinPodElapsed: number | null = null;
 let dolphinPodSeen = false;
@@ -687,6 +688,7 @@ function updateWhalePods(delta: number) {
   }
   const mapBoatY = boat.y - scroll;
   const time = performance.now();
+  let touchingWhaleThisFrame = false;
   for (let index = whalePods.length - 1; index >= 0; index -= 1) {
     const pod = whalePods[index];
     pod.x += Math.cos(pod.heading) * pod.speed * delta;
@@ -710,8 +712,17 @@ function updateWhalePods(delta: number) {
         const push = (1 - dist / knockRadius) * delta * 0.06;
         boat.x += (dx / dist) * push;
       }
+      const contactRadius = 16 + member.size * 14;
+      if (dist < contactRadius) {
+        touchingWhaleThisFrame = true;
+        if (!boatWhaleContact) {
+          const side = dx >= 0 ? 1 : -1;
+          boat.x += side * 10;
+        }
+      }
     }
   }
+  boatWhaleContact = touchingWhaleThisFrame;
   boat.x = Math.max(boat.width, Math.min(world.width - boat.width, boat.x));
 }
 
@@ -827,6 +838,7 @@ function resetVoyage() {
   whalePodCooldown = 5000;
   turtleSlowUntil = 0;
   turtleSlowActive = false;
+  boatWhaleContact = false;
   statusElement.textContent = 'Ready';
   document.querySelector('.status-dot')?.classList.remove('status-dot--complete');
 }
@@ -862,10 +874,12 @@ function update(delta: number) {
     dolphinPodSeen = true;
   }
   const boatMapPosition = { x: boat.x, y: boat.y - scroll };
+  const boatBow = { x: boat.x, y: boatMapPosition.y - 40 };
+  const boatStern = { x: boat.x, y: boatMapPosition.y + 40 };
   turtles.forEach((turtle) => {
     const position = turtlePosition(turtle, performance.now());
-    const hitRadius = 26 + turtle.size * 16;
-    if (Math.hypot(boatMapPosition.x - position.x, boatMapPosition.y - position.y) < hitRadius) {
+    const hitRadius = 26 + turtle.size * 16 + boat.width / 2;
+    if (pointToSegmentDistance(position, boatBow, boatStern) < hitRadius) {
       turtleSlowUntil = survived + 10000;
     }
   });
