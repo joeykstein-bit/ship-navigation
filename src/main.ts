@@ -797,8 +797,12 @@ function turtlePosition(turtle: Turtle, time: number) {
 function resizeCanvas() {
   const ratio = window.devicePixelRatio || 1;
   const bounds = canvas.getBoundingClientRect();
-  canvas.width = Math.max(1, Math.floor(bounds.width * ratio));
-  canvas.height = Math.max(1, Math.floor(bounds.height * ratio));
+  if (bounds.width === 0 || bounds.height === 0) return;
+  const targetWidth = Math.max(1, Math.round(bounds.width * ratio));
+  const targetHeight = Math.max(1, Math.round(bounds.height * ratio));
+  if (canvas.width === targetWidth && canvas.height === targetHeight) return;
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
   context.setTransform(ratio, 0, 0, ratio, 0, 0);
 }
 
@@ -1798,6 +1802,14 @@ window.addEventListener('keydown', (event) => {
 });
 window.addEventListener('keyup', (event) => keys.delete(event.key.toLowerCase()));
 window.addEventListener('resize', resizeCanvas);
+window.addEventListener('orientationchange', resizeCanvas);
+if (typeof ResizeObserver !== 'undefined') {
+  const canvasResizeObserver = new ResizeObserver(() => resizeCanvas());
+  canvasResizeObserver.observe(canvas);
+}
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(() => resizeCanvas()).catch(() => {});
+}
 
 canvas.addEventListener('pointerdown', (event) => {
   beginOrResetVoyage();
