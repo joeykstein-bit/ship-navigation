@@ -1742,8 +1742,18 @@ function draw() {
   const scale = Math.min(width / world.width, height / world.height);
   const offsetX = (width - world.width * scale) / 2;
   const offsetY = (height - world.height * scale) / 2;
+  // Paint the full physical canvas first, independent of the clientWidth/
+  // clientHeight-based scale math above: on some mobile browsers a
+  // sub-pixel rounding gap can appear between that logical size and the
+  // canvas's actual rendered box, letting the frame's own light-blue CSS
+  // background show through at an edge. This guarantees full coverage
+  // regardless of any such mismatch.
   context.save();
-  context.clearRect(0, 0, width, height);
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.fillStyle = deepColor;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.restore();
+  context.save();
   context.translate(offsetX, offsetY);
   context.fillStyle = deepColor;
   context.fillRect(0, 0, world.width * scale, world.height * scale);
