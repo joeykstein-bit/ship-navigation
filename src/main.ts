@@ -687,6 +687,8 @@ function updateWhalePods(delta: number) {
     }
   }
   const mapBoatY = boat.y - scroll;
+  const boatBow = { x: boat.x, y: mapBoatY - 40 };
+  const boatStern = { x: boat.x, y: mapBoatY + 40 };
   const time = performance.now();
   let touchingWhaleThisFrame = false;
   for (let index = whalePods.length - 1; index >= 0; index -= 1) {
@@ -705,14 +707,14 @@ function updateWhalePods(delta: number) {
       }
       updateWhaleMember(pod, member, delta, time);
       const dx = boat.x - member.x;
-      const dy = mapBoatY - member.y;
-      const dist = Math.hypot(dx, dy);
-      const knockRadius = 60;
-      if (dist < knockRadius && dist > 0.01) {
-        const push = (1 - dist / knockRadius) * delta * 0.06;
-        boat.x += (dx / dist) * push;
+      const dist = pointToSegmentDistance({ x: member.x, y: member.y }, boatBow, boatStern);
+      const whaleRadius = 8 + member.size * 8;
+      const contactRadius = boat.width / 2 + whaleRadius;
+      const proximityRadius = contactRadius + 40;
+      if (dist < proximityRadius && dist > 0.01) {
+        const push = (1 - dist / proximityRadius) * delta * 0.12;
+        boat.x += Math.sign(dx || 1) * push;
       }
-      const contactRadius = 16 + member.size * 14;
       if (dist < contactRadius) {
         touchingWhaleThisFrame = true;
         if (!boatWhaleContact) {
@@ -878,7 +880,8 @@ function update(delta: number) {
   const boatStern = { x: boat.x, y: boatMapPosition.y + 40 };
   turtles.forEach((turtle) => {
     const position = turtlePosition(turtle, performance.now());
-    const hitRadius = 26 + turtle.size * 16 + boat.width / 2;
+    const turtleRadius = 5 + turtle.size * 7;
+    const hitRadius = boat.width / 2 + turtleRadius;
     if (pointToSegmentDistance(position, boatBow, boatStern) < hitRadius) {
       turtleSlowUntil = survived + 10000;
     }
