@@ -455,8 +455,8 @@ function addTurtleNearIsland(landmass: Landmass) {
     const normX = dirX / dirLen;
     const normY = dirY / dirLen;
     const shoreSpot = { x: point.x - normX * 4, y: point.y - normY * 4 };
-    const swimSpot = { x: point.x + normX * 30, y: point.y + normY * 30 };
-    if (isLand(shoreSpot) && !isLand(swimSpot)) {
+    const swimSpot = { x: point.x + normX * 80, y: point.y + normY * 80 };
+    if (isLand(shoreSpot) && distanceToLand(swimSpot) > 70) {
       turtles.push({
         shoreX: shoreSpot.x,
         shoreY: shoreSpot.y,
