@@ -38,8 +38,19 @@ const distanceElement = document.querySelector<HTMLElement>('#distance')!;
 const elapsedTimeElement = document.querySelector<HTMLElement>('#elapsed-time')!;
 const statusElement = document.querySelector<HTMLElement>('#voyage-status')!;
 const startBanner = document.querySelector<HTMLElement>('#start-banner')!;
+const eventBanner = document.querySelector<HTMLElement>('#event-banner')!;
 const navLeftButton = document.querySelector<HTMLButtonElement>('#nav-left')!;
 const navRightButton = document.querySelector<HTMLButtonElement>('#nav-right')!;
+
+let eventBannerTimeout: number | undefined;
+function flashEvent(text: string, durationMs: number) {
+  eventBanner.textContent = text;
+  eventBanner.classList.add('event-banner--visible');
+  window.clearTimeout(eventBannerTimeout);
+  eventBannerTimeout = window.setTimeout(() => {
+    eventBanner.classList.remove('event-banner--visible');
+  }, durationMs);
+}
 
 const world = { width: 1200, height: 1200 };
 const shorelineWidth = 10;
@@ -726,6 +737,7 @@ function updateWhalePods(delta: number) {
         if (!boatWhaleContact) {
           const side = dx >= 0 ? 1 : -1;
           boat.x += side * 10;
+          flashEvent('Bounced by whale - stay back!', 2200);
         }
       }
     }
@@ -849,6 +861,8 @@ function resetVoyage() {
   boatWhaleContact = false;
   prevBoatMapX = boat.x;
   prevBoatMapY = boat.y - scroll;
+  window.clearTimeout(eventBannerTimeout);
+  eventBanner.classList.remove('event-banner--visible');
   statusElement.textContent = 'Ready';
   document.querySelector('.status-dot')?.classList.remove('status-dot--complete');
 }
@@ -898,6 +912,7 @@ function update(delta: number) {
   if (turtleSlowedNow && !turtleSlowActive) {
     turtleSlowActive = true;
     statusElement.textContent = 'Tangled with a turtle - slowed!';
+    flashEvent('Tangled with a turtle - slowed!', 2200);
   } else if (!turtleSlowedNow && turtleSlowActive) {
     turtleSlowActive = false;
     statusElement.textContent = 'Underway';
@@ -1270,6 +1285,7 @@ function drawTurtle(x: number, y: number, scale: number, time: number, turtle: T
   context.save();
   context.translate(x * scale, y * scale);
   context.rotate(heading + Math.PI / 2);
+  context.scale(turtle.size, turtle.size);
   const paddle = resting ? 0 : Math.sin(time * 0.006 + turtle.swimSeed);
 
   context.fillStyle = 'rgba(0, 0, 0, .15)';
@@ -1332,7 +1348,7 @@ function drawTurtles(scale: number) {
     const position = turtlePosition(turtle, time);
     const screenY = position.y + scroll;
     if (screenY < -60 || screenY > world.height + 60) return;
-    drawTurtle(position.x, screenY, scale * turtle.size, time, turtle, position.resting, position.heading);
+    drawTurtle(position.x, screenY, scale, time, turtle, position.resting, position.heading);
   });
 }
 
@@ -1431,10 +1447,11 @@ function drawFogPatches(scale: number) {
   fogPatches.forEach((fog) => drawFogPatch(fog, scale, time));
 }
 
-function drawWhale(x: number, y: number, scale: number, phase: number, heading: number, blowProgress: number | null) {
+function drawWhale(x: number, y: number, scale: number, size: number, phase: number, heading: number, blowProgress: number | null) {
   context.save();
   context.translate(x * scale, y * scale);
   context.rotate(heading + Math.PI / 2);
+  context.scale(size, size);
 
   context.fillStyle = '#1b333d';
   [-1, 1].forEach((side) => {
@@ -1545,7 +1562,7 @@ function drawWhalePods(scale: number) {
         const blowProgress = now < member.blowingUntil ? 1 - (member.blowingUntil - now) / whaleBlowDuration : null;
         context.save();
         context.globalAlpha = fade;
-        drawWhale(member.x, screenY, scale * member.size, now * 0.0015 + member.phase, member.heading, blowProgress);
+        drawWhale(member.x, screenY, scale, member.size, now * 0.0015 + member.phase, member.heading, blowProgress);
         context.restore();
       }
     });
