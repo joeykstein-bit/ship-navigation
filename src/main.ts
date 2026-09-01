@@ -1553,12 +1553,16 @@ function drawWhalePods(scale: number) {
   whalePods.forEach((pod) => {
     pod.members.forEach((member) => {
       const screenY = member.y + scroll;
-      const fade = Math.max(0, Math.min(
+      const edgeFade = Math.max(0, Math.min(
         (screenY + whaleFadeMargin) / whaleFadeMargin,
         (world.height + whaleFadeMargin - screenY) / whaleFadeMargin,
         1,
       ));
-      if (fade > 0 && !isLand({ x: member.x, y: member.y }) && distanceToLand({ x: member.x, y: member.y }) > 85) {
+      const landFade = isLand({ x: member.x, y: member.y })
+        ? 0
+        : Math.max(0, Math.min(1, (distanceToLand({ x: member.x, y: member.y }) - 40) / 45));
+      const fade = edgeFade * landFade;
+      if (fade > 0) {
         const blowProgress = now < member.blowingUntil ? 1 - (member.blowingUntil - now) / whaleBlowDuration : null;
         context.save();
         context.globalAlpha = fade;
