@@ -62,6 +62,8 @@ let crashKind: 'land' | 'whirlpool' | null = null;
 let turtleSlowUntil = 0;
 let turtleSlowActive = false;
 let boatWhaleContact = false;
+let prevBoatMapX = boat.x;
+let prevBoatMapY = boat.y - scroll;
 let started = false;
 let dolphinPodElapsed: number | null = null;
 let dolphinPodSeen = false;
@@ -592,6 +594,8 @@ function updateWhirlpools(delta: number) {
     }
   }
   const mapBoatY = boat.y - scroll;
+  const boatPrev = { x: prevBoatMapX, y: prevBoatMapY };
+  const boatCurrent = { x: boat.x, y: mapBoatY };
   for (let index = whirlpools.length - 1; index >= 0; index -= 1) {
     const whirlpool = whirlpools[index];
     if (mapBoatY < whirlpool.y - 500) {
@@ -605,7 +609,9 @@ function updateWhirlpools(delta: number) {
       const pullStrength = (1 - dist / whirlpool.pullRadius) ** 2 * delta * 0.05;
       if (dist > 0.01) boat.x -= (dx / dist) * pullStrength;
     }
-    if (dist < whirlpool.radius * 0.6 && !sinkingWhirlpool) {
+    const coreRadius = whirlpool.radius * 0.6 + boat.width / 2;
+    const sweptDist = pointToSegmentDistance(whirlpool, boatPrev, boatCurrent);
+    if (sweptDist < coreRadius && !sinkingWhirlpool) {
       sinkingWhirlpool = whirlpool;
       sinkingElapsed = 0;
       sinkStartAngle = Math.atan2(dy, dx);
@@ -841,6 +847,8 @@ function resetVoyage() {
   turtleSlowUntil = 0;
   turtleSlowActive = false;
   boatWhaleContact = false;
+  prevBoatMapX = boat.x;
+  prevBoatMapY = boat.y - scroll;
   statusElement.textContent = 'Ready';
   document.querySelector('.status-dot')?.classList.remove('status-dot--complete');
 }
@@ -920,6 +928,8 @@ function update(delta: number) {
     crashKind = 'land';
     statusElement.textContent = 'Crash - press space';
   }
+  prevBoatMapX = boat.x;
+  prevBoatMapY = mapY;
 }
 
 function traceLandmass(landmass: Landmass, yOffset: number, scale: number) {
